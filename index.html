@@ -3,78 +3,105 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Jadwal Lengkap & Piket</title>
+  <title>Jadwal & Piket Sekolah</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body { font-family: 'Inter', sans-serif; }
+    body { font-family: 'Inter', sans-serif; transition: background 0.3s ease; }
   </style>
 </head>
-<body class="default theme-body min-h-screen flex items-center justify-center p-6">
-  <!-- LOGIN FORM -->
-  <div id="loginPage" class="theme-card p-8 rounded-2xl max-w-sm w-full text-center">
-    <h2 class="text-2xl font-bold theme-text-primary mb-4">Login</h2>
+<body class="min-h-screen flex items-center justify-center p-6 bg-gray-100">
+  <!-- LOGIN -->
+  <div id="loginPage" class="p-8 rounded-2xl max-w-sm w-full text-center bg-white shadow-md">
+    <h2 class="text-2xl font-bold text-gray-800 mb-4">Login</h2>
     <input id="username" type="text" placeholder="Username" class="w-full p-2 border rounded mb-3">
     <input id="password" type="password" placeholder="Password" class="w-full p-2 border rounded mb-4">
-    <button onclick="login()" class="w-full p-2 theme-accent-bg text-white rounded hover:opacity-90">Login</button>
+    <button onclick="login()" class="w-full p-2 bg-blue-600 text-white rounded hover:opacity-90">Login</button>
     <p id="loginError" class="text-red-600 mt-3 hidden">Username atau password salah!</p>
   </div>
 
   <!-- HALAMAN UTAMA -->
   <div id="mainPage" class="hidden flex-col w-full max-w-3xl mx-auto space-y-4">
     <div class="flex justify-between items-center">
-      <h1 class="text-3xl font-bold theme-text-primary">Jadwal & Piket</h1>
-      <div>
-        <span id="roleBadge" class="px-3 py-1 rounded-lg theme-accent-bg text-white text-sm font-semibold mr-2"></span>
+      <h1 class="text-3xl font-bold text-gray-800">📚 Jadwal & 🧹 Piket</h1>
+      <div class="flex items-center space-x-2">
+        <select id="themeSelector" onchange="changeTheme()" class="border rounded p-1">
+          <option value="blue">Biru</option>
+          <option value="green">Hijau</option>
+          <option value="purple">Ungu</option>
+          <option value="dark">Gelap</option>
+        </select>
+        <span id="roleBadge" class="px-3 py-1 rounded-lg text-white text-sm font-semibold"></span>
         <button onclick="logout()" class="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700">Logout</button>
       </div>
     </div>
 
-    <!-- Contoh Jadwal -->
-    <div id="scheduleList" class="theme-card p-4 rounded-2xl space-y-3">
-      <div class="flex justify-between items-center border-b pb-2">
-        <div>
-          <h2 class="font-semibold text-lg theme-text-primary">Senin</h2>
-          <p class="theme-text-secondary">B. Indonesia, Informatika, BK, Geografi</p>
-        </div>
-        <div class="actionButtons hidden space-x-2">
-          <button class="bg-yellow-400 px-2 py-1 rounded text-white hover:bg-yellow-500">Edit</button>
-          <button class="bg-red-500 px-2 py-1 rounded text-white hover:bg-red-600">Hapus</button>
-        </div>
-      </div>
-      <div class="flex justify-between items-center border-b pb-2">
-        <div>
-          <h2 class="font-semibold text-lg theme-text-primary">Selasa</h2>
-          <p class="theme-text-secondary">B. Sunda, PJOK, Sejarah, BK, B. Inggris</p>
-        </div>
-        <div class="actionButtons hidden space-x-2">
-          <button class="bg-yellow-400 px-2 py-1 rounded text-white hover:bg-yellow-500">Edit</button>
-          <button class="bg-red-500 px-2 py-1 rounded text-white hover:bg-red-600">Hapus</button>
-        </div>
-      </div>
+    <!-- Navigasi -->
+    <div class="flex space-x-2">
+      <button onclick="showTab('schedule')" id="btnSchedule" class="px-3 py-2 rounded bg-blue-600 text-white">📅 Jadwal</button>
+      <button onclick="showTab('picket')" id="btnPicket" class="px-3 py-2 rounded bg-gray-300">🧹 Piket</button>
     </div>
 
-    <!-- Tombol tambah jadwal (hanya admin) -->
+    <!-- Jadwal -->
+    <div id="scheduleTab" class="space-y-3 bg-white p-4 rounded-2xl shadow-md"></div>
     <div id="addScheduleContainer" class="hidden">
-      <button class="theme-accent-bg text-white px-4 py-2 rounded-lg hover:opacity-90">+ Tambah Jadwal</button>
+      <button onclick="openAddModal('schedule')" class="mt-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:opacity-90">+ Tambah Jadwal</button>
+    </div>
+
+    <!-- Piket -->
+    <div id="picketTab" class="hidden space-y-3 bg-white p-4 rounded-2xl shadow-md"></div>
+    <div id="addPicketContainer" class="hidden">
+      <button onclick="openAddModal('picket')" class="mt-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:opacity-90">+ Tambah Piket</button>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div id="modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+    <div class="bg-white p-6 rounded-lg w-80">
+      <h2 id="modalTitle" class="text-xl font-semibold mb-3"></h2>
+      <input id="dayInput" type="text" placeholder="Hari (misal: Senin)" class="w-full p-2 border rounded mb-2">
+      <textarea id="contentInput" placeholder="Isi (pelajaran/piket, pisahkan dengan koma)" class="w-full p-2 border rounded mb-4"></textarea>
+      <div class="flex justify-end space-x-2">
+        <button onclick="closeModal()" class="px-3 py-2 bg-gray-400 text-white rounded hover:bg-gray-500">Batal</button>
+        <button onclick="saveData()" class="px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700">Simpan</button>
+      </div>
     </div>
   </div>
 
   <script>
     const loginPage = document.getElementById("loginPage");
     const mainPage = document.getElementById("mainPage");
-    const loginError = document.getElementById("loginError");
     const roleBadge = document.getElementById("roleBadge");
-    const addScheduleContainer = document.getElementById("addScheduleContainer");
-    const actionButtons = document.querySelectorAll(".actionButtons");
+    const loginError = document.getElementById("loginError");
+    const scheduleTab = document.getElementById("scheduleTab");
+    const picketTab = document.getElementById("picketTab");
 
-    // Cek apakah sudah login sebelumnya
+    const addScheduleContainer = document.getElementById("addScheduleContainer");
+    const addPicketContainer = document.getElementById("addPicketContainer");
+    const themeSelector = document.getElementById("themeSelector");
+
+    let currentUser = null;
+    let editIndex = null;
+    let editType = null;
+
+    let schedules = JSON.parse(localStorage.getItem("schedules")) || [
+      { day: "Senin", content: "B. Indonesia, Informatika, BK, Geografi" },
+      { day: "Selasa", content: "B. Sunda, PJOK, Sejarah, BK, B. Inggris" }
+    ];
+
+    let pickets = JSON.parse(localStorage.getItem("pickets")) || [
+      { day: "Senin", content: "Rafi, Nisa, Dimas" },
+      { day: "Selasa", content: "Ayu, Joko, Tania" }
+    ];
+
     window.onload = () => {
       const user = localStorage.getItem("user");
-      if (user) {
-        showMainPage(user);
-      }
+      const theme = localStorage.getItem("theme") || "blue";
+      themeSelector.value = theme;
+      applyTheme(theme);
+      if (user) showMainPage(user);
     };
 
+    // Login
     function login() {
       const username = document.getElementById("username").value.trim();
       const password = document.getElementById("password").value.trim();
@@ -90,29 +117,150 @@
       }
     }
 
+    // Show halaman utama
     function showMainPage(role) {
+      currentUser = role;
       loginPage.classList.add("hidden");
       mainPage.classList.remove("hidden");
+
       roleBadge.textContent = role === "admin" ? "Admin" : "User";
-      roleBadge.classList.toggle("bg-green-600", role === "admin");
-      roleBadge.classList.toggle("bg-blue-600", role === "user");
+      roleBadge.className = `px-3 py-1 rounded-lg text-white text-sm font-semibold ${
+        role === "admin" ? "bg-green-600" : "bg-blue-600"
+      }`;
 
       if (role === "admin") {
         addScheduleContainer.classList.remove("hidden");
-        actionButtons.forEach(btn => btn.classList.remove("hidden"));
+        addPicketContainer.classList.remove("hidden");
       } else {
         addScheduleContainer.classList.add("hidden");
-        actionButtons.forEach(btn => btn.classList.add("hidden"));
+        addPicketContainer.classList.add("hidden");
       }
+
+      showTab("schedule");
     }
 
+    // Logout
     function logout() {
       localStorage.removeItem("user");
       mainPage.classList.add("hidden");
       loginPage.classList.remove("hidden");
       document.getElementById("username").value = "";
       document.getElementById("password").value = "";
-      loginError.classList.add("hidden");
+    }
+
+    // Tampilkan tab
+    function showTab(tab) {
+      document.getElementById("btnSchedule").className =
+        tab === "schedule" ? "px-3 py-2 rounded bg-blue-600 text-white" : "px-3 py-2 rounded bg-gray-300";
+      document.getElementById("btnPicket").className =
+        tab === "picket" ? "px-3 py-2 rounded bg-blue-600 text-white" : "px-3 py-2 rounded bg-gray-300";
+
+      if (tab === "schedule") {
+        scheduleTab.classList.remove("hidden");
+        picketTab.classList.add("hidden");
+        renderList("schedule");
+      } else {
+        picketTab.classList.remove("hidden");
+        scheduleTab.classList.add("hidden");
+        renderList("picket");
+      }
+    }
+
+    // Render jadwal/piket
+    function renderList(type) {
+      const data = type === "schedule" ? schedules : pickets;
+      const target = type === "schedule" ? scheduleTab : picketTab;
+      target.innerHTML = "";
+
+      data.forEach((item, index) => {
+        const div = document.createElement("div");
+        div.className = "flex justify-between items-center border-b pb-2";
+        div.innerHTML = `
+          <div>
+            <h2 class="font-semibold text-lg text-gray-800">${item.day}</h2>
+            <p class="text-gray-600">${item.content}</p>
+          </div>
+          ${
+            currentUser === "admin"
+              ? `<div class="space-x-2">
+                  <button onclick="editData('${type}', ${index})" class="bg-yellow-400 px-2 py-1 rounded text-white hover:bg-yellow-500">Edit</button>
+                  <button onclick="deleteData('${type}', ${index})" class="bg-red-500 px-2 py-1 rounded text-white hover:bg-red-600">Hapus</button>
+                </div>`
+              : ""
+          }
+        `;
+        target.appendChild(div);
+      });
+    }
+
+    // Tambah/Edit Modal
+    function openAddModal(type) {
+      editType = type;
+      editIndex = null;
+      document.getElementById("modalTitle").textContent = `Tambah ${type === "schedule" ? "Jadwal" : "Piket"}`;
+      document.getElementById("dayInput").value = "";
+      document.getElementById("contentInput").value = "";
+      document.getElementById("modal").classList.remove("hidden");
+    }
+
+    function editData(type, index) {
+      editType = type;
+      editIndex = index;
+      const item = type === "schedule" ? schedules[index] : pickets[index];
+      document.getElementById("modalTitle").textContent = `Edit ${type === "schedule" ? "Jadwal" : "Piket"}`;
+      document.getElementById("dayInput").value = item.day;
+      document.getElementById("contentInput").value = item.content;
+      document.getElementById("modal").classList.remove("hidden");
+    }
+
+    function saveData() {
+      const day = document.getElementById("dayInput").value.trim();
+      const content = document.getElementById("contentInput").value.trim();
+      if (!day || !content) return;
+
+      const data = editType === "schedule" ? schedules : pickets;
+      if (editIndex !== null) {
+        data[editIndex] = { day, content };
+      } else {
+        data.push({ day, content });
+      }
+
+      if (editType === "schedule") localStorage.setItem("schedules", JSON.stringify(schedules));
+      else localStorage.setItem("pickets", JSON.stringify(pickets));
+
+      renderList(editType);
+      closeModal();
+    }
+
+    function deleteData(type, index) {
+      if (confirm("Yakin ingin menghapus data ini?")) {
+        const data = type === "schedule" ? schedules : pickets;
+        data.splice(index, 1);
+        localStorage.setItem(type === "schedule" ? "schedules" : "pickets", JSON.stringify(data));
+        renderList(type);
+      }
+    }
+
+    function closeModal() {
+      document.getElementById("modal").classList.add("hidden");
+    }
+
+    // Tema warna
+    function changeTheme() {
+      const theme = themeSelector.value;
+      localStorage.setItem("theme", theme);
+      applyTheme(theme);
+    }
+
+    function applyTheme(theme) {
+      const root = document.body;
+      const colorMap = {
+        blue: "bg-blue-50 text-blue-900",
+        green: "bg-green-50 text-green-900",
+        purple: "bg-purple-50 text-purple-900",
+        dark: "bg-gray-900 text-gray-100"
+      };
+      root.className = `min-h-screen flex items-center justify-center p-6 transition-all ${colorMap[theme]}`;
     }
   </script>
 </body>
